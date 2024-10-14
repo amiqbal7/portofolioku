@@ -1,0 +1,31 @@
+.scramble-container {
+    display: inline-block; /* Display inline for text items */
+    cursor: pointer; /* Change cursor to pointer on hover */
+  }
+  
+  .text-item {
+    display: inline-block; /* Ensure each character is treated separately */
+    position: relative; /* Position relative for scrambling */
+    transition: opacity 0.3s ease; /* Smooth transition for opacity */
+  }
+  
+  .scrambling {
+    animation: scramble 0.1s infinite; /* Trigger scrambling animation */
+  }
+  
+  @keyframes scramble {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5; /* Fade to half opacity */
+    }
+    100% {
+      opacity: 1; /* Return to full opacity */
+    }
+  }
+  
+  .hovered .text-item {
+    animation: none; /* Disable animation when hovered */
+  }
+  
