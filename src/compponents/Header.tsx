@@ -2,12 +2,8 @@ import bcr from "../assets/bcr.jpeg";
 import netplig from "../assets/netplig.jpeg";
 import bcr22 from "../assets/bcr-dsbrd.jpeg";
 import tiketku from "../assets/tiketku.png";
-import ant from "../assets/ant.png";
 import library from "../assets/library.jpeg";
 import porto from "../assets/porto.jpg";
-import reacticon from "../assets/react.svg";
-import tailwind from "../assets/tailwind.png";
-import laravel from "../assets/laravel.png";
 import setara from "../assets/setara.jpeg";
 
 export const Header = () => {
