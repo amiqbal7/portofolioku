@@ -36,7 +36,17 @@ export const Header = () => {
         <div className="pt-5">
           <h1 className="text-2xl font-extrabold">EXPERIENCE</h1>
           <hr></hr>
-          <div>
+          <div className="pt-4">
+            <div className="flex justify-between items-center">
+              <h2 className="pt-1">PT. BLANTIKA KREASI MUDA (Intern)</h2>
+              <p className="text-sm">May - Jul 2023</p>
+            </div>
+            <p className="text-sm pt-1">
+              I completed a several-month internship where I developed a website
+              using React.js and Express.js.
+            </p>
+          </div>
+          <div className="pt-5">
             <div className="flex justify-between items-center">
               <h2 className="pt-2">PT. WIDYA INOVATION INDONESIA (Intern)</h2>
 
@@ -50,14 +60,22 @@ export const Header = () => {
               up using React and TypeScript.{" "}
             </p>
           </div>
-          <div className="pt-4">
+          <div className="pt-5">
             <div className="flex justify-between items-center">
-              <h2 className="pt-1">PT. BLANTIKA KREASI MUDA (Intern)</h2>
-              <p className="text-sm">May - Jul 2023</p>
+              <h2 className="pt-2">PT. MAHAKA DIGITAL INDONESIA</h2>
+
+              <p className="text-sm">Oct 2024 - Now 2025</p>
             </div>
             <p className="text-sm pt-1">
-              I completed a several-month internship where I developed a website
-              using React.js and Express.js.
+              I work as a Web Developer at PT Mahaka Digital Indonesia, a
+              company specializing in regional tax consulting services. In this
+              role, I am responsible for developing web-based applications using
+              Laravel as the primary tech stack. I am also experienced in
+              directly communicating with clients to understand their needs and
+              ensure that the solutions I deliver align with their expectations.
+              With a strong background in web development and excellent
+              interpersonal skills, I focus on delivering high-quality and
+              efficient results.
             </p>
           </div>
         </div>
@@ -84,25 +102,25 @@ export const Header = () => {
             </div>
             <div className="pt-4">
               <div className="flex justify-between items-center">
-                <h2 className="pt-2">BINAR ACADEMY X SYNERGY by BCA</h2>
-                <p className="text-sm pt-2">Feb - Aug 2022</p>
+                <h2 className="pt-2">SYNERGY ACADEMY by BCA</h2>
+                <p className="text-sm pt-2">Feb - Aug 2024</p>
               </div>
               <p className="text-sm pt-1">Fullstack Web.</p>
             </div>
           </div>
         </div>
 
-        <div className="text-2xl text-white font-extrabold pt-5">
+        {/* <div className="text-2xl text-white font-extrabold pt-5">
           <h1>SKILLS</h1>
 
           <hr></hr>
-          <div className="flex space-x-4 pt-5 justify-center">
+          <div className="flex space-x-4 pt-5 ">
             <img className="w-16 h-16" src={laravel} alt="Laravel" />
             <img className="w-16 h-16" src={reacticon} alt="React" />
             <img className="w-18 h-16" src={tailwind} alt="Tailwind CSS" />
             <img className="w-16 h-16" src={ant} alt="Ant Design" />
           </div>
-        </div>
+        </div> */}
 
         <div>
           <div className="text-2xl text-white font-extrabold pt-5">
@@ -110,7 +128,7 @@ export const Header = () => {
           </div>
 
           <hr />
-          <div className="flex flex-wrap mt-4 gap-4 justify-center">
+          <div className="flex flex-wrap mt-4 gap-4 ">
             {[
               {
                 src: tiketku,
@@ -121,7 +139,13 @@ export const Header = () => {
               {
                 src: setara,
                 title: "SETARA (Internet Banking Accesbility)",
-                techs: ["React", "Typescript", "Tailwind", "Context", "Ant Design"],
+                techs: [
+                  "React",
+                  "Typescript",
+                  "Tailwind",
+                  "Context",
+                  "Ant Design",
+                ],
                 link: "",
               },
               {
