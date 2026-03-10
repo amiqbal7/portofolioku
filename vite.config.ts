@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig({
-  base: "/", // penting untuk github pages root repo
+  base: "./", // penting untuk github pages root repo
   plugins: [react()],
   resolve: {
     dedupe: ["react", "react-dom", "three", "@react-three/fiber"],
