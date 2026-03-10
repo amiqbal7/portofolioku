@@ -172,7 +172,6 @@ function Buckle({ cardPos }: { cardPos: React.MutableRefObject<THREE.Vector3> })
   );
 }
 
-// ── Scan line ─────────────────────────────────────────────────────────────────
 function ScanLine() {
   const ref = useRef<THREE.Mesh>(null);
   useFrame(({ clock }) => {
@@ -189,7 +188,6 @@ function ScanLine() {
   );
 }
 
-// ── Corner brackets ───────────────────────────────────────────────────────────
 function Brackets() {
   const corners: [number, number][] = [
     [-1.37, 2.15], [1.37, 2.15],
@@ -213,7 +211,6 @@ function Brackets() {
   );
 }
 
-// ── Drag trail ────────────────────────────────────────────────────────────────
 function DragTrail({
   cardPos, isDragging,
 }: {
@@ -250,7 +247,24 @@ function DragTrail({
   );
 }
 
-// ── Main ID Card ──────────────────────────────────────────────────────────────
+function BackgroundText() {
+  return (
+   <Text
+  position={[0, 0.5, -1.5]}
+  fontSize={2.4}
+  maxWidth={20.6}
+  lineHeight={1}
+  letterSpacing={0.05}
+  textAlign="center"
+  color="#ffffff"
+  anchorX="center"
+  anchorY="middle"
+>
+      {`WELCOME TO MY CREATIVE LAB, LETS BUILD SOMETHING`}
+    </Text>
+  );
+}
+
 function IDCard() {
   const groupRef = useRef<THREE.Group>(null);
   const texture = useLoader(TextureLoader, keenanImg);
@@ -335,12 +349,10 @@ function IDCard() {
           <meshPhysicalMaterial color="#ffffff" roughness={0.06} metalness={0} clearcoat={1} clearcoatRoughness={0.04} />
         </RoundedBox>
 
-        {/* Shadow edge */}
         <RoundedBox args={[3.02, 4.62, 0.088]} radius={0.13} smoothness={6}>
           <meshBasicMaterial color="#000000" transparent opacity={0.06} side={THREE.BackSide} depthWrite={false} />
         </RoundedBox>
 
-        {/* Dark header */}
         <mesh position={[0, 1.92, 0.046]}>
           <planeGeometry args={[3.0, 0.7]} />
           <meshBasicMaterial color="#111111" />
@@ -351,19 +363,15 @@ function IDCard() {
           STAFF · ID CARD
         </Text>
 
-        {/* Photo */}
         <mesh position={[0, 0.44, 0.046]}><planeGeometry args={[2.14, 2.14]} /><meshBasicMaterial color="#eeeeee" /></mesh>
         <mesh position={[0, 0.44, 0.050]}><planeGeometry args={[2.08, 2.08]} /><meshBasicMaterial map={texture} /></mesh>
 
-        {/* Name */}
         <Text position={[0, -0.9, 0.052]} fontSize={0.33} color="#111111" letterSpacing={0.1} anchorX="center">
           amiqbal
         </Text>
 
-        {/* Divider */}
         <mesh position={[0, -1.2, 0.050]}><planeGeometry args={[1.8, 0.008]} /><meshBasicMaterial color="#cccccc" /></mesh>
 
-        {/* Role */}
         <Text position={[0, -1.4, 0.052]} fontSize={0.14} color="#555555" letterSpacing={0.2} anchorX="center">
           SOFTWARE ENGINEER
         </Text>
@@ -376,7 +384,6 @@ function IDCard() {
   );
 }
 
-// ── Barcode ───────────────────────────────────────────────────────────────────
 function BarcodeDecor() {
   const bars = useRef(
     Array.from({ length: 30 }, (_, i) => ({ x: -1.08 + i * 0.074, w: Math.random() * 0.022 + 0.01 }))
@@ -396,7 +403,6 @@ function BarcodeDecor() {
   );
 }
 
-// ── Export ────────────────────────────────────────────────────────────────────
 export default function Card() {
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -409,11 +415,11 @@ export default function Card() {
         <directionalLight position={[0, 5, 5]} intensity={1.2} color="#ffffff" />
         <pointLight position={[-3, 2, 3]} intensity={0.5} color="#f0f0ff" />
         <Suspense fallback={null}>
+            <BackgroundText />
           <IDCard />
         </Suspense>
       </Canvas>
 
-      {/* Scroll indicator overlay */}
       <div style={{
         position: "absolute",
         bottom: "2rem",
