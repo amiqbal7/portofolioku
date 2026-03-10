@@ -1,10 +1,5 @@
-import bcr from "../assets/bcr.jpeg";
-import netplig from "../assets/netplig.jpeg";
-import bcr22 from "../assets/bcr-dsbrd.jpeg";
-import tiketku from "../assets/tiketku.png";
-import library from "../assets/library.jpeg";
-import porto from "../assets/porto.jpg";
-import setara from "../assets/setara.jpeg";
+
+import ProjectsSection from "./ProjectsSection";
 
 export const Header = () => {
   return (
@@ -60,7 +55,7 @@ export const Header = () => {
             <div className="flex justify-between items-center">
               <h2 className="pt-2">PT. MAHAKA DIGITAL INDONESIA</h2>
 
-              <p className="text-sm">Oct 2024 - Now 2025</p>
+              <p className="text-sm">Oct 2024 - Now.</p>
             </div>
             <p className="text-sm pt-1">
               I work as a Web Developer at PT Mahaka Digital Indonesia, a
@@ -124,104 +119,7 @@ export const Header = () => {
           </div>
 
           <hr />
-          <div className="flex flex-wrap mt-4 gap-4 ">
-            {[
-              {
-                src: tiketku,
-                title: "Tiketku Flight Booking",
-                techs: ["React", "Typescript", "Tailwind", "Redux"],
-                link: "https://perpustakaan-laravel90.vercel.app/login",
-              },
-              {
-                src: setara,
-                title: "SETARA (Internet Banking Accesbility)",
-                techs: [
-                  "React",
-                  "Typescript",
-                  "Tailwind",
-                  "Context",
-                  "Ant Design",
-                ],
-                link: "",
-              },
-              {
-                src: bcr,
-                title: "Binar Car Rental",
-                techs: [
-                  "React",
-                  "Typescript",
-                  "Tailwind",
-                  "Express",
-                  "Ant Design",
-                ],
-                link: "https://24001118-synrgy7-ars-bcr-ch7.vercel.app/",
-              },
-              {
-                src: bcr22,
-                title: "Binar Car Rental Dashboard",
-                techs: [
-                  "React",
-                  "Typescript",
-                  "Tailwind",
-                  "Express",
-                  "Ant Design",
-                ],
-                link: "https://web-backoffice-service-spgw.vercel.app/login",
-              },
-              {
-                src: netplig,
-                title: "Netplig Movie Web",
-                techs: ["React", "Typescript", "Tailwind"],
-                link: "https://movie-app-binar.vercel.app/",
-              },
-              {
-                src: library,
-                title: "Library Web",
-                techs: ["Laravel", "Blade", "Bootstrap"],
-                link: "https://perpustakaan-laravel90.vercel.app/login",
-              },
-              {
-                src: porto,
-                title: "Portofolio Web",
-                techs: ["React", "Typescript", "Tailwind", "Three.js"],
-                link: "https://perpustakaan-laravel90.vercel.app/login",
-              },
-            ].map((project, index) => (
-              <a
-                key={index}
-                href={project.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="border-2 w-full sm:w-80 relative overflow-hidden group"
-              >
-                <div>
-                  <img
-                    className="border-white rounded-sm w-full h-36 object-cover transition-transform duration-300 ease-in-out transform group-hover:scale-105"
-                    src={project.src}
-                    alt={project.title}
-                  />
-                </div>
-                {/* Linear gradient overlay */}
-                <div className="absolute inset-0 bg-black opacity-10 rounded-sm transition-opacity duration-300 ease-in-out group-hover:opacity-0 pointer-events-none"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent rounded-sm transition-opacity duration-300 ease-in-out group-hover:opacity-0 pointer-events-none"></div>
-                <div className="text-xs flex gap-5 p-2 relative z-10">
-                  <div>
-                    <p className="font-semibold">{project.title}</p>
-                    <div className="pt-3 flex gap-2 flex-wrap">
-                      {project.techs.map((tech, index) => (
-                        <span
-                          key={index}
-                          className="py-0.5 px-1 border rounded-sm bg-slate-800"
-                        >
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </a>
-            ))}
-          </div>
+          <ProjectsSection />
         </div>
 
         <div className="">

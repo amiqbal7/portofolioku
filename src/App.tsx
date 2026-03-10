@@ -1,3 +1,5 @@
+import Card from "./compponents/Card";
+import CursorTail from "./compponents/CursorTail";
 import { Header } from "./compponents/Header";
 import StarsCanvas from "./compponents/StarsCanvas";
 
@@ -5,10 +7,16 @@ import StarsCanvas from "./compponents/StarsCanvas";
 const App = () => {
   return (
     <div className="App">
+      <CursorTail />
       <StarsCanvas />
-      <div className="content text-white font-geist-mono">
+      <div className="content">
+        <section className="flex items-center justify-center h-screen">
+          <Card />
+        </section>
+        <div className="text-white font-geist-mono">
         <Header />
-        {/* Konten lainnya */}
+
+        </div>
       </div>
     </div>
   );
