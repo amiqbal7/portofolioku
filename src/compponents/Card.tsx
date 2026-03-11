@@ -8,6 +8,81 @@ import keenanImg from "../assets/foto.jpeg";
 const SEGS = 40;
 const RW = 0.22;
 
+const ROWS = [
+  "LETS BUILD SOMETHING AMAZING",
+  "LETS BUILD SOMETHING AMAZING",
+  "LETS BUILD SOMETHING AMAZING",
+  "LETS BUILD SOMETHING AMAZING",
+];
+
+const SPEED = 0.012;
+const ROW_HEIGHT = 2.2;
+const FONT_SIZE = 2.0;
+const REPEAT = "          ";
+
+function RunningRow({
+  text,
+  direction,
+  yPos,
+}: {
+  text: string;
+  direction: 1 | -1;
+  yPos: number;
+}) {
+  const ref1 = useRef<any>(null);
+  const ref2 = useRef<any>(null);
+
+  const TILE_WIDTH = text.length * FONT_SIZE * 0.62;
+
+  useFrame(() => {
+    if (!ref1.current || !ref2.current) return;
+
+    ref1.current.position.x += SPEED * direction;
+    ref2.current.position.x += SPEED * direction;
+
+    if (direction === 1) {
+      if (ref1.current.position.x > TILE_WIDTH) ref1.current.position.x -= TILE_WIDTH * 2;
+      if (ref2.current.position.x > TILE_WIDTH) ref2.current.position.x -= TILE_WIDTH * 2;
+    } else {
+      if (ref1.current.position.x < -TILE_WIDTH) ref1.current.position.x += TILE_WIDTH * 2;
+      if (ref2.current.position.x < -TILE_WIDTH) ref2.current.position.x += TILE_WIDTH * 2;
+    }
+  });
+
+  const fullText = text + REPEAT + text;
+
+  return (
+    <group position={[0, yPos, -1.5]}>
+      <Text
+        ref={ref1}
+        position={[0, 0, 0]}
+        fontSize={FONT_SIZE}
+        letterSpacing={0.08}
+        color="#ffffff"
+        anchorX="center"
+        anchorY="middle"
+        fontWeight={900}
+        fillOpacity={0.76}
+      >
+        {fullText}
+      </Text>
+      <Text
+        ref={ref2}
+        position={[direction === 1 ? -TILE_WIDTH : TILE_WIDTH, 0, 0]}
+        fontSize={FONT_SIZE}
+        letterSpacing={0.08}
+        color="#ffffff"
+        anchorX="center"
+        anchorY="middle"
+        fontWeight={900}
+        fillOpacity={0.09}
+      >
+        {fullText}
+      </Text>
+    </group>
+  );
+}
+
 function buildRibbon(spine: THREE.Vector3[]): THREE.BufferGeometry {
   const pos: number[] = [];
   const nrm: number[] = [];
@@ -57,8 +132,6 @@ function getSpine(from: THREE.Vector3, to: THREE.Vector3, sag: number): THREE.Ve
 function Lanyard({ cardPos }: { cardPos: React.MutableRefObject<THREE.Vector3> }) {
   const leftRef = useRef<THREE.Mesh>(null);
   const rightRef = useRef<THREE.Mesh>(null);
-  const leftTextRef = useRef<THREE.Group>(null);
-  const rightTextRef = useRef<THREE.Group>(null);
 
   const LEFT_TOP = new THREE.Vector3(-0.5, 5.8, 0);
   const RIGHT_TOP = new THREE.Vector3(0.5, 5.8, 0);
@@ -84,28 +157,9 @@ function Lanyard({ cardPos }: { cardPos: React.MutableRefObject<THREE.Vector3> }
       rightRef.current.geometry.dispose();
       rightRef.current.geometry = buildRibbon(rightSpine);
     }
-
-    const lMid = leftSpine[Math.floor(SEGS * 0.45)];
-    const lA = leftSpine[Math.floor(SEGS * 0.38)];
-    const lB = leftSpine[Math.floor(SEGS * 0.52)];
-    const lAngle = Math.atan2(lB.y - lA.y, lB.x - lA.x) + Math.PI / 2;
-
-    const rMid = rightSpine[Math.floor(SEGS * 0.45)];
-    const rA = rightSpine[Math.floor(SEGS * 0.38)];
-    const rB = rightSpine[Math.floor(SEGS * 0.52)];
-    const rAngle = Math.atan2(rB.y - rA.y, rB.x - rA.x) + Math.PI / 2;
-
-    if (leftTextRef.current) {
-      leftTextRef.current.position.set(lMid.x, lMid.y, 0.08);
-      leftTextRef.current.rotation.z = lAngle;
-    }
-    if (rightTextRef.current) {
-      rightTextRef.current.position.set(rMid.x, rMid.y, 0.08);
-      rightTextRef.current.rotation.z = rAngle;
-    }
   });
 
-  const buckleInit = new THREE.Vector3(0, -0.8 + 2.35, 0);
+  const buckleInit = new THREE.Vector3(0, -0.5 + 2.35, 0);
   const initL = buildRibbon(getSpine(LEFT_TOP, buckleInit, 0.2));
   const initR = buildRibbon(getSpine(RIGHT_TOP, buckleInit, 0.2));
 
@@ -114,54 +168,33 @@ function Lanyard({ cardPos }: { cardPos: React.MutableRefObject<THREE.Vector3> }
       <mesh ref={leftRef} geometry={initL}>
         <meshStandardMaterial color="#f0f0f0" side={THREE.DoubleSide} roughness={0.15} metalness={0} />
       </mesh>
-
       <mesh ref={rightRef} geometry={initR}>
         <meshStandardMaterial color="#f0f0f0" side={THREE.DoubleSide} roughness={0.15} metalness={0} />
       </mesh>
-
-      {/* <group ref={leftTextRef}>
-        <Text fontSize={0.1} color="#333333" letterSpacing={0.15} anchorX="center" anchorY="middle">
-          AMIQBAL
-        </Text>
-      </group>
-      <group ref={rightTextRef}>
-        <Text fontSize={0.09} color="#444444" letterSpacing={0.12} anchorX="center" anchorY="middle">
-          S O F T W A R E
-        </Text>
-      </group> */}
     </group>
   );
 }
 
-// ── Buckle — follows card, sits between strap and card ───────────────────────
 function Buckle({ cardPos }: { cardPos: React.MutableRefObject<THREE.Vector3> }) {
   const ref = useRef<THREE.Group>(null);
   useFrame(() => {
     if (!ref.current) return;
-    ref.current.position.set(
-      cardPos.current.x,
-      cardPos.current.y + 2.35,
-      0.05
-    );
+    ref.current.position.set(cardPos.current.x, cardPos.current.y + 2.35, 0.05);
   });
   return (
     <group ref={ref}>
-      {/* Main body */}
       <mesh>
         <boxGeometry args={[0.42, 0.2, 0.09]} />
         <meshStandardMaterial color="#1c1c1c" metalness={0.4} roughness={0.5} />
       </mesh>
-      {/* Inner slot */}
       <mesh position={[0, 0, 0.02]}>
         <boxGeometry args={[0.28, 0.09, 0.06]} />
         <meshStandardMaterial color="#0a0a0a" />
       </mesh>
-      {/* Center bar */}
       <mesh position={[0, 0, 0.06]}>
         <boxGeometry args={[0.42, 0.025, 0.03]} />
         <meshStandardMaterial color="#2a2a2a" metalness={0.6} roughness={0.3} />
       </mesh>
-      {/* Side release tabs */}
       {([-1, 1] as const).map((side, i) => (
         <mesh key={i} position={[side * 0.24, 0, 0]}>
           <boxGeometry args={[0.05, 0.17, 0.13]} />
@@ -169,22 +202,6 @@ function Buckle({ cardPos }: { cardPos: React.MutableRefObject<THREE.Vector3> })
         </mesh>
       ))}
     </group>
-  );
-}
-
-function ScanLine() {
-  const ref = useRef<THREE.Mesh>(null);
-  useFrame(({ clock }) => {
-    if (!ref.current) return;
-    const t = clock.getElapsedTime();
-    ref.current.position.y = -2.25 + ((t * 0.55) % 4.5);
-    (ref.current.material as THREE.MeshBasicMaterial).opacity = 0.04 + Math.sin(t * 4) * 0.02;
-  });
-  return (
-    <mesh ref={ref} position={[0, 0, 0.056]}>
-      <planeGeometry args={[2.92, 0.03]} />
-      <meshBasicMaterial color="#000000" transparent opacity={0.05} depthWrite={false} />
-    </mesh>
   );
 }
 
@@ -212,7 +229,8 @@ function Brackets() {
 }
 
 function DragTrail({
-  cardPos, isDragging,
+  cardPos,
+  isDragging,
 }: {
   cardPos: React.MutableRefObject<THREE.Vector3>;
   isDragging: React.MutableRefObject<boolean>;
@@ -232,7 +250,9 @@ function DragTrail({
     if (!pointsRef.current) return;
     const pos = new Float32Array(COUNT * 3);
     trailPos.current.forEach((p, i) => {
-      pos[i * 3] = p.x; pos[i * 3 + 1] = p.y; pos[i * 3 + 2] = p.z;
+      pos[i * 3] = p.x;
+      pos[i * 3 + 1] = p.y;
+      pos[i * 3 + 2] = p.z;
     });
     pointsRef.current.geometry.setAttribute("position", new THREE.BufferAttribute(pos, 3));
   });
@@ -247,37 +267,187 @@ function DragTrail({
   );
 }
 
-function BackgroundText() {
+export function BackgroundText() {
+  const totalRows = ROWS.length;
+  const startY = ((totalRows - 1) / 2) * ROW_HEIGHT;
+
   return (
-   <Text
-  position={[0, 0.5, -1.5]}
-  fontSize={2.4}
-  maxWidth={20.6}
-  lineHeight={1}
-  letterSpacing={0.05}
-  textAlign="center"
-  color="#ffffff"
-  anchorX="center"
-  anchorY="middle"
->
-      {`WELCOME TO MY CREATIVE LAB, LETS BUILD SOMETHING`}
-    </Text>
+    <group>
+      {ROWS.map((text, i) => (
+        <RunningRow
+          key={i}
+          text={text}
+          direction={i % 2 === 0 ? 1 : -1}
+          yPos={startY - i * ROW_HEIGHT}
+        />
+      ))}
+    </group>
   );
 }
 
+function BarcodeDecor() {
+  const bars = useRef(
+    Array.from({ length: 30 }, (_, i) => ({
+      x: -1.08 + i * 0.074,
+      w: Math.random() * 0.022 + 0.01,
+    }))
+  );
+  return (
+    <group position={[0, -1.88, 0.055]}>
+      {bars.current.map((b, i) => (
+        <mesh key={i} position={[b.x, 0, 0]}>
+          <planeGeometry args={[b.w, 0.28]} />
+          <meshBasicMaterial color="#111111" />
+        </mesh>
+      ))}
+      <Text
+        position={[0, -0.22, 0.005]}
+        fontSize={0.085}
+        color="#333333"
+        letterSpacing={0.12}
+        anchorX="center"
+      >
+        AMQ · 2025 · SWE-001
+      </Text>
+    </group>
+  );
+}
+
+// ── Device Motion Hook ────────────────────────────────────────────────────────
+function useDeviceMotion(
+  targetPos: React.MutableRefObject<THREE.Vector3>,
+  isDragging: React.MutableRefObject<boolean>,
+  restY: number
+) {
+  useEffect(() => {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (!isMobile) return;
+
+    const handleMotion = (e: DeviceMotionEvent) => {
+      // Jangan override saat sedang drag manual
+      if (isDragging.current) return;
+
+      const x = e.accelerationIncludingGravity?.x ?? 0;
+      const y = e.accelerationIncludingGravity?.y ?? 0;
+
+      // Clamp agar tidak terlalu ekstrem
+      const clampedX = Math.max(-3, Math.min(3, x));
+      const clampedY = Math.max(-3, Math.min(3, y));
+
+      targetPos.current.set(
+        clampedX * 0.18,          // sensitifitas horizontal
+        restY + clampedY * 0.12,  // sensitifitas vertical
+        0
+      );
+    };
+
+    // iOS 13+ butuh permission
+    const requestAndListen = async () => {
+      if (typeof (DeviceMotionEvent as any).requestPermission === "function") {
+        try {
+          const permission = await (DeviceMotionEvent as any).requestPermission();
+          if (permission === "granted") {
+            window.addEventListener("devicemotion", handleMotion);
+          }
+        } catch {
+          // Permission denied atau tidak support
+        }
+      } else {
+        // Android — langsung aktif tanpa permission
+        window.addEventListener("devicemotion", handleMotion);
+      }
+    };
+
+    requestAndListen();
+
+    return () => {
+      window.removeEventListener("devicemotion", handleMotion);
+    };
+  }, [targetPos, isDragging, restY]);
+}
+
+// ── iOS Permission Button ─────────────────────────────────────────────────────
+function MotionPermissionButton({
+  targetPos,
+  isDragging,
+  restY,
+}: {
+  targetPos: React.MutableRefObject<THREE.Vector3>;
+  isDragging: React.MutableRefObject<boolean>;
+  restY: number;
+}) {
+  const needsPermission =
+    typeof (DeviceMotionEvent as any).requestPermission === "function";
+
+  if (!needsPermission) return null;
+
+  const handleClick = async () => {
+    try {
+      const permission = await (DeviceMotionEvent as any).requestPermission();
+      if (permission === "granted") {
+        window.addEventListener("devicemotion", (e: DeviceMotionEvent) => {
+          if (isDragging.current) return;
+          const x = e.accelerationIncludingGravity?.x ?? 0;
+          const y = e.accelerationIncludingGravity?.y ?? 0;
+          const clampedX = Math.max(-3, Math.min(3, x));
+          const clampedY = Math.max(-3, Math.min(3, y));
+          targetPos.current.set(clampedX * 0.18, restY + clampedY * 0.12, 0);
+        });
+        // Sembunyikan tombol setelah granted
+        const btn = document.getElementById("motion-btn");
+        if (btn) btn.style.display = "none";
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <button
+      id="motion-btn"
+      onClick={handleClick}
+      style={{
+        position: "absolute",
+        bottom: "5rem",
+        left: "50%",
+        transform: "translateX(-50%)",
+        background: "rgba(255,255,255,0.08)",
+        border: "1px solid rgba(255,255,255,0.2)",
+        color: "rgba(255,255,255,0.7)",
+        fontSize: "0.6rem",
+        letterSpacing: "0.2em",
+        padding: "0.4rem 1rem",
+        borderRadius: "2px",
+        fontFamily: "monospace",
+        cursor: "pointer",
+        pointerEvents: "auto",
+        zIndex: 10,
+      }}
+    >
+      ↑ ENABLE MOTION
+    </button>
+  );
+}
+
+// ── Main ID Card ──────────────────────────────────────────────────────────────
 function IDCard() {
   const groupRef = useRef<THREE.Group>(null);
   const texture = useLoader(TextureLoader, keenanImg);
   const { viewport, gl } = useThree();
 
+  const REST_Y = -0.5;
+
   const isDragging = useRef(false);
-  const pos = useRef(new THREE.Vector3(0, -0.5, 0));
-  const targetPos = useRef(new THREE.Vector3(0, -0.5, 0));
+  const pos = useRef(new THREE.Vector3(0, REST_Y, 0));
+  const targetPos = useRef(new THREE.Vector3(0, REST_Y, 0));
   const velPos = useRef(new THREE.Vector3());
   const rot = useRef(new THREE.Vector2());
   const rotVel = useRef(new THREE.Vector2());
   const wobble = useRef(0);
   const wasReleased = useRef(false);
+
+  // Device motion — goyang HP → card ikut goyang
+  useDeviceMotion(targetPos, isDragging, REST_Y);
 
   useEffect(() => {
     const canvas = gl.domElement;
@@ -292,11 +462,29 @@ function IDCard() {
     const hit = (wx: number, wy: number) =>
       Math.abs(wx - pos.current.x) < 1.6 && Math.abs(wy - pos.current.y) < 2.4;
 
-    const down = (e: MouseEvent) => { const w = toWorld(e.clientX, e.clientY); if (hit(w.x, w.y)) { isDragging.current = true; wobble.current = 0; } };
-    const move = (e: MouseEvent) => { if (!isDragging.current) return; const w = toWorld(e.clientX, e.clientY); targetPos.current.set(w.x, w.y, 0); };
-    const up = () => { if (isDragging.current) wasReleased.current = true; isDragging.current = false; targetPos.current.set(0, -0.5, 0); };
-    const td = (e: TouchEvent) => { const w = toWorld(e.touches[0].clientX, e.touches[0].clientY); if (hit(w.x, w.y)) { isDragging.current = true; wobble.current = 0; } };
-    const tm = (e: TouchEvent) => { if (!isDragging.current) return; const w = toWorld(e.touches[0].clientX, e.touches[0].clientY); targetPos.current.set(w.x, w.y, 0); };
+    const down = (e: MouseEvent) => {
+      const w = toWorld(e.clientX, e.clientY);
+      if (hit(w.x, w.y)) { isDragging.current = true; wobble.current = 0; }
+    };
+    const move = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      const w = toWorld(e.clientX, e.clientY);
+      targetPos.current.set(w.x, w.y, 0);
+    };
+    const up = () => {
+      if (isDragging.current) wasReleased.current = true;
+      isDragging.current = false;
+      targetPos.current.set(0, REST_Y, 0);
+    };
+    const td = (e: TouchEvent) => {
+      const w = toWorld(e.touches[0].clientX, e.touches[0].clientY);
+      if (hit(w.x, w.y)) { isDragging.current = true; wobble.current = 0; }
+    };
+    const tm = (e: TouchEvent) => {
+      if (!isDragging.current) return;
+      const w = toWorld(e.touches[0].clientX, e.touches[0].clientY);
+      targetPos.current.set(w.x, w.y, 0);
+    };
 
     canvas.addEventListener("mousedown", down);
     window.addEventListener("mousemove", move);
@@ -322,7 +510,9 @@ function IDCard() {
     const stiff = isDragging.current ? 0.28 : 0.06;
     const damp = isDragging.current ? 0.52 : 0.72;
 
-    velPos.current.multiplyScalar(damp).addScaledVector(targetPos.current.clone().sub(pos.current), stiff);
+    velPos.current.multiplyScalar(damp).addScaledVector(
+      targetPos.current.clone().sub(pos.current), stiff
+    );
     pos.current.add(velPos.current);
     groupRef.current.position.copy(pos.current);
 
@@ -344,11 +534,9 @@ function IDCard() {
       <DragTrail cardPos={pos} isDragging={isDragging} />
 
       <group ref={groupRef}>
-        {/* White card */}
         <RoundedBox args={[3.0, 4.6, 0.09]} radius={0.13} smoothness={6}>
           <meshPhysicalMaterial color="#ffffff" roughness={0.06} metalness={0} clearcoat={1} clearcoatRoughness={0.04} />
         </RoundedBox>
-
         <RoundedBox args={[3.02, 4.62, 0.088]} radius={0.13} smoothness={6}>
           <meshBasicMaterial color="#000000" transparent opacity={0.06} side={THREE.BackSide} depthWrite={false} />
         </RoundedBox>
@@ -357,20 +545,35 @@ function IDCard() {
           <planeGeometry args={[3.0, 0.7]} />
           <meshBasicMaterial color="#111111" />
         </mesh>
-        <mesh position={[0, 2.27, 0.047]}><planeGeometry args={[2.85, 0.012]} /><meshBasicMaterial color="#444444" /></mesh>
-        <mesh position={[0, 1.57, 0.047]}><planeGeometry args={[2.85, 0.012]} /><meshBasicMaterial color="#444444" /></mesh>
+        <mesh position={[0, 2.27, 0.047]}>
+          <planeGeometry args={[2.85, 0.012]} />
+          <meshBasicMaterial color="#444444" />
+        </mesh>
+        <mesh position={[0, 1.57, 0.047]}>
+          <planeGeometry args={[2.85, 0.012]} />
+          <meshBasicMaterial color="#444444" />
+        </mesh>
         <Text position={[0, 1.92, 0.052]} fontSize={0.2} color="#ffffff" letterSpacing={0.22} anchorX="center">
-          STAFF · ID CARD
+          ID CARD
         </Text>
 
-        <mesh position={[0, 0.44, 0.046]}><planeGeometry args={[2.14, 2.14]} /><meshBasicMaterial color="#eeeeee" /></mesh>
-        <mesh position={[0, 0.44, 0.050]}><planeGeometry args={[2.08, 2.08]} /><meshBasicMaterial map={texture} /></mesh>
+        <mesh position={[0, 0.44, 0.046]}>
+          <planeGeometry args={[2.14, 2.14]} />
+          <meshBasicMaterial color="#eeeeee" />
+        </mesh>
+        <mesh position={[0, 0.44, 0.050]}>
+          <planeGeometry args={[2.08, 2.08]} />
+          <meshBasicMaterial map={texture} />
+        </mesh>
 
-        <Text position={[0, -0.9, 0.052]} fontSize={0.33} color="#111111" letterSpacing={0.1} anchorX="center">
+        <Text position={[0, -0.9, 0.052]} fontSize={0.38} fontWeight={900} color="#111111" letterSpacing={0.1} anchorX="center">
           amiqbal
         </Text>
 
-        <mesh position={[0, -1.2, 0.050]}><planeGeometry args={[1.8, 0.008]} /><meshBasicMaterial color="#cccccc" /></mesh>
+        <mesh position={[0, -1.2, 0.050]}>
+          <planeGeometry args={[1.8, 0.008]} />
+          <meshBasicMaterial color="#cccccc" />
+        </mesh>
 
         <Text position={[0, -1.4, 0.052]} fontSize={0.14} color="#555555" letterSpacing={0.2} anchorX="center">
           SOFTWARE ENGINEER
@@ -378,36 +581,19 @@ function IDCard() {
 
         <BarcodeDecor />
         <Brackets />
-        <ScanLine />
       </group>
     </>
   );
 }
 
-function BarcodeDecor() {
-  const bars = useRef(
-    Array.from({ length: 30 }, (_, i) => ({ x: -1.08 + i * 0.074, w: Math.random() * 0.022 + 0.01 }))
-  );
-  return (
-    <group position={[0, -1.88, 0.055]}>
-      {bars.current.map((b, i) => (
-        <mesh key={i} position={[b.x, 0, 0]}>
-          <planeGeometry args={[b.w, 0.28]} />
-          <meshBasicMaterial color="#111111" />
-        </mesh>
-      ))}
-      <Text position={[0, -0.22, 0.005]} fontSize={0.085} color="#333333" letterSpacing={0.12} anchorX="center">
-        AMQ · 2025 · SWE-001
-      </Text>
-    </group>
-  );
-}
-
 export default function Card() {
+  const targetPosRef = useRef(new THREE.Vector3(0, -0.5, 0));
+  const isDraggingRef = useRef(false);
+
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <Canvas
-        camera={{ position: [0, 0.5, 10], fov: 50 }}
+        camera={{ position: [0, 0.5, 8], fov: 48 }}
         style={{ width: "100%", height: "100%", background: "transparent" }}
         gl={{ antialias: true, alpha: true }}
       >
@@ -415,11 +601,19 @@ export default function Card() {
         <directionalLight position={[0, 5, 5]} intensity={1.2} color="#ffffff" />
         <pointLight position={[-3, 2, 3]} intensity={0.5} color="#f0f0ff" />
         <Suspense fallback={null}>
-            <BackgroundText />
+          <BackgroundText />
           <IDCard />
         </Suspense>
       </Canvas>
 
+      {/* iOS permission button — hanya muncul di iPhone/iPad */}
+      <MotionPermissionButton
+        targetPos={targetPosRef}
+        isDragging={isDraggingRef}
+        restY={-0.5}
+      />
+
+      {/* Scroll indicator */}
       <div style={{
         position: "absolute",
         bottom: "2rem",
@@ -432,8 +626,8 @@ export default function Card() {
         pointerEvents: "none",
       }}>
         <p style={{
-          color: "rgba(255, 255, 255, 0.45)",
-          fontSize: "1rem",
+          color: "rgba(255,255,255,0.45)",
+          fontSize: "0.6rem",
           letterSpacing: "0.35em",
           fontFamily: "monospace",
           textTransform: "uppercase",
@@ -454,7 +648,7 @@ export default function Card() {
             width: 0, height: 0,
             borderLeft: "4px solid transparent",
             borderRight: "4px solid transparent",
-            borderTop: "5px solid rgba(230, 227, 227, 0.4)",
+            borderTop: "5px solid rgba(230,227,227,0.4)",
           }} />
         </div>
       </div>

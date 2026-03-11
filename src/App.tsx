@@ -2,9 +2,11 @@ import Card from "./compponents/Card";
 import CursorTail from "./compponents/CursorTail";
 import { Header } from "./compponents/Header";
 import StarsCanvas from "./compponents/StarsCanvas";
+import { useLenis } from "./hooks/useLenis";
 
 
 const App = () => {
+  useLenis();
   return (
     <div className="App">
       <CursorTail />
