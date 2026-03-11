@@ -1,9 +1,13 @@
-import { useRef, useEffect, Suspense } from "react";
+import { useRef, useEffect, Suspense, useState } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { Text, RoundedBox } from "@react-three/drei";
 import { TextureLoader } from "three";
 import * as THREE from "three";
 import keenanImg from "../assets/foto.jpeg";
+
+// ── Global motion target (shared antara IDCard dan permission button) ─────────
+const _motionTarget = { x: 0, y: -0.5 };
+const _motionEnabled = { value: false };
 
 const SEGS = 40;
 const RW = 0.22;
@@ -62,7 +66,7 @@ function RunningRow({
         anchorX="center"
         anchorY="middle"
         fontWeight={900}
-        fillOpacity={0.76}
+        // fillOpacity={0.}
       >
         {fullText}
       </Text>
@@ -75,7 +79,7 @@ function RunningRow({
         anchorX="center"
         anchorY="middle"
         fontWeight={900}
-        fillOpacity={0.09}
+        fillOpacity={0.06}
       >
         {fullText}
       </Text>
@@ -313,89 +317,59 @@ function BarcodeDecor() {
   );
 }
 
-// ── Device Motion Hook ────────────────────────────────────────────────────────
+function _handleMotion(e: DeviceMotionEvent) {
+  if (!_motionEnabled.value) return;
+  const x = e.accelerationIncludingGravity?.x ?? 0;
+  const y = e.accelerationIncludingGravity?.y ?? 0;
+  _motionTarget.x = Math.max(-3, Math.min(3, x)) * 0.18;
+  _motionTarget.y = -0.5 + Math.max(-3, Math.min(3, y)) * 0.12;
+}
+
 function useDeviceMotion(
   targetPos: React.MutableRefObject<THREE.Vector3>,
-  isDragging: React.MutableRefObject<boolean>,
-  restY: number
+  isDragging: React.MutableRefObject<boolean>
 ) {
   useEffect(() => {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     if (!isMobile) return;
 
-    const handleMotion = (e: DeviceMotionEvent) => {
-      // Jangan override saat sedang drag manual
-      if (isDragging.current) return;
+    const isIOS = typeof (DeviceMotionEvent as any).requestPermission === "function";
 
-      const x = e.accelerationIncludingGravity?.x ?? 0;
-      const y = e.accelerationIncludingGravity?.y ?? 0;
-
-      // Clamp agar tidak terlalu ekstrem
-      const clampedX = Math.max(-3, Math.min(3, x));
-      const clampedY = Math.max(-3, Math.min(3, y));
-
-      targetPos.current.set(
-        clampedX * 0.18,          // sensitifitas horizontal
-        restY + clampedY * 0.12,  // sensitifitas vertical
-        0
-      );
-    };
-
-    // iOS 13+ butuh permission
-    const requestAndListen = async () => {
-      if (typeof (DeviceMotionEvent as any).requestPermission === "function") {
-        try {
-          const permission = await (DeviceMotionEvent as any).requestPermission();
-          if (permission === "granted") {
-            window.addEventListener("devicemotion", handleMotion);
-          }
-        } catch {
-          // Permission denied atau tidak support
-        }
-      } else {
-        // Android — langsung aktif tanpa permission
-        window.addEventListener("devicemotion", handleMotion);
-      }
-    };
-
-    requestAndListen();
+    if (!isIOS) {
+      // Android — langsung aktif
+      _motionEnabled.value = true;
+      window.addEventListener("devicemotion", _handleMotion);
+    }
+    // iOS — tunggu permission lewat tombol (lihat MotionPermissionButton)
 
     return () => {
-      window.removeEventListener("devicemotion", handleMotion);
+      window.removeEventListener("devicemotion", _handleMotion);
     };
-  }, [targetPos, isDragging, restY]);
+  }, []);
+
+  // Sync _motionTarget ke targetPos setiap frame
+  useFrame(() => {
+    if (!_motionEnabled.value) return;
+    if (isDragging.current) return;
+    targetPos.current.set(_motionTarget.x, _motionTarget.y, 0);
+  });
 }
 
 // ── iOS Permission Button ─────────────────────────────────────────────────────
-function MotionPermissionButton({
-  targetPos,
-  isDragging,
-  restY,
-}: {
-  targetPos: React.MutableRefObject<THREE.Vector3>;
-  isDragging: React.MutableRefObject<boolean>;
-  restY: number;
-}) {
-  const needsPermission =
-    typeof (DeviceMotionEvent as any).requestPermission === "function";
+function MotionPermissionButton() {
+  const isIOS = typeof (DeviceMotionEvent as any).requestPermission === "function";
+  const isMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const [granted, setGranted] = useState(false);
 
-  if (!needsPermission) return null;
+  if (!isIOS || !isMobile || granted) return null;
 
   const handleClick = async () => {
     try {
       const permission = await (DeviceMotionEvent as any).requestPermission();
       if (permission === "granted") {
-        window.addEventListener("devicemotion", (e: DeviceMotionEvent) => {
-          if (isDragging.current) return;
-          const x = e.accelerationIncludingGravity?.x ?? 0;
-          const y = e.accelerationIncludingGravity?.y ?? 0;
-          const clampedX = Math.max(-3, Math.min(3, x));
-          const clampedY = Math.max(-3, Math.min(3, y));
-          targetPos.current.set(clampedX * 0.18, restY + clampedY * 0.12, 0);
-        });
-        // Sembunyikan tombol setelah granted
-        const btn = document.getElementById("motion-btn");
-        if (btn) btn.style.display = "none";
+        _motionEnabled.value = true;
+        window.addEventListener("devicemotion", _handleMotion);
+        setGranted(true);
       }
     } catch {
       // ignore
@@ -404,33 +378,32 @@ function MotionPermissionButton({
 
   return (
     <button
-      id="motion-btn"
       onClick={handleClick}
       style={{
         position: "absolute",
-        bottom: "5rem",
+        bottom: "5.5rem",
         left: "50%",
         transform: "translateX(-50%)",
-        background: "rgba(255,255,255,0.08)",
-        border: "1px solid rgba(255,255,255,0.2)",
-        color: "rgba(255,255,255,0.7)",
-        fontSize: "0.6rem",
-        letterSpacing: "0.2em",
-        padding: "0.4rem 1rem",
+        background: "rgba(255,255,255,0.06)",
+        border: "1px solid rgba(255,255,255,0.18)",
+        color: "rgba(255,255,255,0.6)",
+        fontSize: "0.55rem",
+        letterSpacing: "0.22em",
+        padding: "0.45rem 1.1rem",
         borderRadius: "2px",
         fontFamily: "monospace",
         cursor: "pointer",
         pointerEvents: "auto",
         zIndex: 10,
+        textTransform: "uppercase",
       }}
     >
-      ↑ ENABLE MOTION
+      ↑ Enable Motion
     </button>
   );
 }
 
-// ── Main ID Card ──────────────────────────────────────────────────────────────
-function IDCard() {
+function IDCard({ isReady }: { isReady: boolean }) {
   const groupRef = useRef<THREE.Group>(null);
   const texture = useLoader(TextureLoader, keenanImg);
   const { viewport, gl } = useThree();
@@ -446,8 +419,14 @@ function IDCard() {
   const wobble = useRef(0);
   const wasReleased = useRef(false);
 
+  // Drop animation refs
+  const dropY = useRef(7.0);         // posisi awal card (tinggi di atas layar)
+  const dropVel = useRef(0);         // kecepatan jatuh
+  const hasDropped = useRef(false);  // sudah landing?
+  const landingTriggered = useRef(false); // wobble landing sudah trigger?
+
   // Device motion — goyang HP → card ikut goyang
-  useDeviceMotion(targetPos, isDragging, REST_Y);
+  useDeviceMotion(targetPos, isDragging);
 
   useEffect(() => {
     const canvas = gl.domElement;
@@ -504,11 +483,43 @@ function IDCard() {
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
+
+    // ── Phase 1: Jatuh dari atas ─────────────────────────────────────────
+    if (isReady && !hasDropped.current) {
+      // Damping ringan = ada bounce saat landing
+      dropVel.current *= 0.88;
+      dropVel.current += (REST_Y - dropY.current) * 0.038;
+      dropY.current += dropVel.current;
+
+      pos.current.y = dropY.current;
+      targetPos.current.y = REST_Y;
+
+      // Landing check
+      if (Math.abs(dropY.current - REST_Y) < 0.05 && Math.abs(dropVel.current) < 0.012) {
+        dropY.current = REST_Y;
+        pos.current.y = REST_Y;
+        hasDropped.current = true;
+      }
+
+      groupRef.current.position.copy(pos.current);
+      const fallProgress = 1 - Math.max(0, Math.min(1, (dropY.current - REST_Y) / 7.5));
+      groupRef.current.rotation.z = Math.sin(fallProgress * Math.PI) * 0.25;
+      groupRef.current.rotation.x = -0.15 + fallProgress * 0.15;
+      return;
+    }
+
+    if (hasDropped.current && !landingTriggered.current) {
+      rotVel.current.y = 0;
+      rot.current.y = 0;
+      wobble.current = 0.002;
+      landingTriggered.current = true;
+    }
+
     if (wasReleased.current) { wobble.current = 1.0; wasReleased.current = false; }
-    wobble.current *= 0.87;
+    wobble.current *= 0;
 
     const stiff = isDragging.current ? 0.28 : 0.06;
-    const damp = isDragging.current ? 0.52 : 0.72;
+    const damp  = isDragging.current ? 0.52 : 0.72;
 
     velPos.current.multiplyScalar(damp).addScaledVector(
       targetPos.current.clone().sub(pos.current), stiff
@@ -517,14 +528,16 @@ function IDCard() {
     groupRef.current.position.copy(pos.current);
 
     rotVel.current.x += (-velPos.current.y * 0.35 - rot.current.x) * 0.2;
-    rotVel.current.y += (velPos.current.x * 0.5 - rot.current.y) * 0.2;
-    rotVel.current.multiplyScalar(0.76);
+    rotVel.current.y += (-rot.current.y) * 0.05;     
+    rotVel.current.y += velPos.current.x * 0.5;      
+    rotVel.current.multiplyScalar(0.78);           
     rot.current.add(rotVel.current);
 
     const t = clock.getElapsedTime();
-    groupRef.current.rotation.x = rot.current.x + Math.cos(t * 6) * wobble.current * 0.09;
+    const swingZ = Math.sin(t * 0) * wobble.current * 0;
+    groupRef.current.rotation.x = rot.current.x + Math.cos(t * 6) * wobble.current * 0.0;
     groupRef.current.rotation.y = rot.current.y;
-    groupRef.current.rotation.z = Math.sin(t * 7) * wobble.current * 0.13;
+    groupRef.current.rotation.z = swingZ;
   });
 
   return (
@@ -554,7 +567,7 @@ function IDCard() {
           <meshBasicMaterial color="#444444" />
         </mesh>
         <Text position={[0, 1.92, 0.052]} fontSize={0.2} color="#ffffff" letterSpacing={0.22} anchorX="center">
-          ID CARD
+          · ID CARD ·
         </Text>
 
         <mesh position={[0, 0.44, 0.046]}>
@@ -586,10 +599,8 @@ function IDCard() {
   );
 }
 
-export default function Card() {
-  const targetPosRef = useRef(new THREE.Vector3(0, -0.5, 0));
-  const isDraggingRef = useRef(false);
-
+// ── Export ────────────────────────────────────────────────────────────────────
+export default function Card({ isReady = false }: { isReady?: boolean }) {
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <Canvas
@@ -602,18 +613,12 @@ export default function Card() {
         <pointLight position={[-3, 2, 3]} intensity={0.5} color="#f0f0ff" />
         <Suspense fallback={null}>
           <BackgroundText />
-          <IDCard />
+          <IDCard isReady={isReady} />
         </Suspense>
       </Canvas>
 
-      {/* iOS permission button — hanya muncul di iPhone/iPad */}
-      <MotionPermissionButton
-        targetPos={targetPosRef}
-        isDragging={isDraggingRef}
-        restY={-0.5}
-      />
+      <MotionPermissionButton />
 
-      {/* Scroll indicator */}
       <div style={{
         position: "absolute",
         bottom: "2rem",
@@ -626,7 +631,7 @@ export default function Card() {
         pointerEvents: "none",
       }}>
         <p style={{
-          color: "rgba(255,255,255,0.45)",
+          color: "rgba(235, 231, 231, 1)",
           fontSize: "0.6rem",
           letterSpacing: "0.35em",
           fontFamily: "monospace",

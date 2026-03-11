@@ -11,7 +11,7 @@ export const Header = () => {
             ARSY MUHAMMAD IQBAL
           </span>{" "}
           <br />
-          I'm a Web Developer.
+          I'm a Software Engineer.
         </div>
         <div className="pt-5">
           <p className="font-extralight text-sm">
